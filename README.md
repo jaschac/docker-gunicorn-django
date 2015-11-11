@@ -1,4 +1,4 @@
-# gunicorn-django
+# jaschac/gunicorn-django
 #### Table of Contents
 1. [Overview](#overview)
 2. [Image Description](#image-description)
@@ -39,7 +39,7 @@ $ sudo docker pull jaschac/gunicorn-django
 gunicorn-django's source code can be freely pulled from Github and used to build the image.
 
 ```bash
-$ git clone <GIT REPO> gunicorn-django
+$ git clone git@github.com:jaschac/gunicorn-django.git gunicorn-django
 ```
  
  Once pulled, the image will have the following structure:
@@ -187,3 +187,4 @@ This module has been developed and tested on the following setup(s):
 *Docker Componse*
 
  - 1.5.0
+

@@ -15,6 +15,6 @@
   "source": "https://bitbucket.org/lostinmalloc/dockerhub/src",
   "summary": "Gunicorn serving a Django web application",
   "tags":["django", "gunicorn", "python", "web application"],
-  "version": "0.1.4"
+  "version": "0.1.5"
 }
 
