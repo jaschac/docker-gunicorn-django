@@ -4,26 +4,28 @@
 2. [Image Description](#image-description)
 3. [Setup](#setup)
     * [Pulling from the Docker Hub](#pulling-from-the-docker-hub)
-    * [Building the image](#building-the-image)
+    * [Building the Image from the Source](#building-the-image-from-the-source)
+        * [The Dockerfile](#the-dockerfile)
+        * [The setup.sh](#the-setup.sh)
 4. [Usage](#usage)
-5. [Reference](#reference)
-6. [Limitations](#limitations)
-7. [Development](#development)
+5. [Limitations](#limitations)
+6. [Development](#development)
+    * [To do](#to-do)
 
 ### Overview
-This image deploys a Gunicorn Web Server Gateway Interface HTTP Server serving a Django web application. By default it fires up 2 workers and listens to port 8001, which is exposed to the host.
+This image deploys a Gunicorn Web Server Gateway Interface HTTP Server serving a Django web application. It allows the client to customize both the number of workers to fire up and the port to listen to.
 
 ### Image Description
-The gunicorn-django image is responsible of: 
+The gunicorn-django image is responsible of:
 
  1. Deploying a Gunicorn WSGI Server.
- 2. Firing up workers ready to serve any HTTP request made to the Django web application being served, through port 8001.
+ 2. Firing up workers ready to serve any HTTP request made to the Django web application being served, through an arbitrary port, which defaults to 8001.
 
-By default a container run using the gunicorn-django image will:
+A container running the gunicorn-django image will:
 
- 1. This
- 2. That
- 3. and that!
+ 1. Check if a volume containing a Django web application has been added to /var/www/webapp.
+ 2. Find the name of Django web application present at /var/www/webapp.
+ 3. Fire up N workers serving the web application, listening to an arbitrary port, which defaults to 8001.
 
 ### Setup
 There are two ways to get and use the gunicorn-django image to create containers:
@@ -31,66 +33,81 @@ There are two ways to get and use the gunicorn-django image to create containers
 #### Pulling from the Docker Hub
  1. Pulling it from the Docker Hub.
 
-```bash
-    $ ADD ME
-    $ ADD ME
-```
-
-#### Building the image
+#### Building the Image from the Source
 gunicorn-django's source code can be freely pulled from Github, modified and used to build the image.
+
 ```bash
-    $ git clone <GIT REPO> .
+    $ git clone <GIT REPO> gunicorn-django
 ```
+ 
  Once pulled, the image will have the following structure:
 ```bash
     gunicorn-django/
     ├── Dockerfile
     ├── LICENSE
     ├── metadata.json
-    └── README.md
+    ├── README.md
+    └── scripts
+        └── setup.sh
 ```
- The image can be built with the following command(s):
+
+The image can be built with the following command(s):
 
 ```bash
-$ echo $PWD
-/home/jascha/projects/docker
-$ sudo docker build -t gunicorn -f $PWD/images/gunicorn-django/Dockerfile $PWD/images/gunicorn-django
-Successfully built bf090f4d6cc0
-```
-Notice the last part of the command, where we define the build context, that is, the root directory used by Docker to build the gunicorn-django image. We want to make sure that it is, indeed, the gunicorn-django directory and not one of its parents.
-
-## Usage
-
-Running a container in interactive mode, with a bash shell ready to use:
-
-```bash
-ADD ME
+    $ sudo docker build -t gunicorn -f $PWD/gunicorn-django/Dockerfile $PWD/gunicorn-django
+    Successfully built 8ecf91a49000
+    $ sudo docker images
+    REPOSITORY          TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
+    gunicorn            latest              8ecf91a49000        13 seconds ago      380.1 MB
 ```
 
-## Reference
+#### The Dockerfile
 @TODO
 
-## Limitations
-The module has not been tested as a daemon yet. So far it works by running the container with an interactive bash shell and running gunicorn, then accessing it through curl. At the moment, the image automatically adapts to whatever name the Django web application is given, as long as it is server in /var/www/webapp/.
+#### The setup.sh
+@TODO
 
+
+## Usage
+The gunicorn-django does expect the following information to be provided by the client:
+
+ * A **directory** containing a Django web application. This directory should be shared at the root level, that is, were the manage.py file is. It is expected to be provided as a (read only) volume pointing at /var/www/webapp/.
+
+The following optional parameters can be also provided to a container:
+
+ * A **port** that GUnicorn will be listening to. This defaults to 8001. It must be provided as the $GUNICORN_PORT environment variable.
+ * The **number of workers** GUnicorn will fire up. It defaults to 2. It must be provided as the $GUNICORN_WORKERS environment variable.
+
+In the following example we do assume to have this scenario:
 ```bash
-$ pwd
-/home/jascha/projects/docker
-$ sudo docker run --rm=true -p 8001:8001 -v $PWD/volumes/django/djsonizer/:/var/www/webapp:ro -ti gunicorn /bin/bash
-
-root@89535735ba9a:/# cd /var/www/webapp
-root@89535735ba9a:/var/www/webapp# webapp=$(find * -maxdepth 0 -type d)
-root@89535735ba9a:/var/www/webapp# echo $webapp
-djsonizer
-root@89535735ba9a:/var/www/webapp# gunicorn $webapp.wsgi:application -w 2 --bind=127.0.0.1:8001 &
-[2015-11-02 23:19:23 +0000] [449] [INFO] Starting gunicorn 19.3.0
-[2015-11-02 23:19:23 +0000] [449] [INFO] Listening at: http://127.0.0.1:8001 (449)
-[2015-11-02 23:19:23 +0000] [449] [INFO] Using worker: sync
-[2015-11-02 23:19:23 +0000] [454] [INFO] Booting worker with pid: 454
-[2015-11-02 23:19:23 +0000] [455] [INFO] Booting worker with pid: 455
-root@89535735ba9a:/var/www/webapp# curl http://127.0.0.1:8001
-{"cached": false, "word": "", "len": 0, "cached_by": {}}
+$ tree -d
+.
+├── images
+│   └── gunicorn-django
+└── volumes
+    └── django
+        └── djsonizer
 ```
+
+We can fire up a gunicorn-django container and expose port 8001 to the host to test it.
+```bash
+$ sudo docker run -p 8001:8001 -v $PWD/volumes/django/djsonizer/:/var/www/webapp:ro -d gunicorn
+87680bcf0d77e35c3ed04dacbd88700707b3a886b606265b6c92a0c2878ae4fa
+
+$ sudo docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                    NAMES
+87680bcf0d77        gunicorn            "/bin/sh -c 'sh setup"   12 seconds ago      Up 11 seconds       0.0.0.0:8001->8001/tcp   tender_morse
+
+$ sudo docker inspect 87680bcf0d77 | grep -e \"IPAddress\"
+"IPAddress": "172.17.0.10",
+
+$ curl 172.17.0.10:8001/hello/
+{"cached": false, "word": "hello", "len": 5, "cached_by": ""}
+```
+
+## Limitations
+At the very moment the image does not allow the client to provide the container neither the number of workers nor the port that GUnicorn should be listening for connections to. Both are optional and should be provided by the client through environment variables. The former defaults to 2, while the latter to 8001.
+
 
 ## Development
 This module has been developed and tested on the following setup(s):
@@ -108,12 +125,7 @@ This module has been developed and tested on the following setup(s):
  - Not tested, yet.
 
 
+#### To do
 
-
-
-$ curl 172.17.0.8:8001
-{"cached": false, "word": "", "len": 0, "cached_by": {}}jascha@docker:~/projects/docker$ 
-jascha@docker:~/projects/docker$ sudo docker ps
-CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                    NAMES
-9551afcacce9        gunicorn            "/bin/sh -c 'sh setup"   About a minute ago   Up About a minute   0.0.0.0:8001->8001/tcp   kickass_tesla
-udo docker run -p 8001:8001 -v $PWD/volumes/django/djsonizer/:/var/www/webapp:ro -d gunicorn
+ * Add support for an environment variable that allows the client to define the number of workers and that defaults to 2
+ * Add support for an environment variable that allows the client to define the port GUnicorn will listen to. It defaults to 8001.
