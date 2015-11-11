@@ -11,7 +11,6 @@
     * [Docker Compose](#docker-compose)
 5. [Limitations](#limitations)
 6. [Development](#development)
-    * [To do](#to-do)
 
 ### Overview
 This image deploys a Gunicorn Web Server Gateway Interface HTTP Server serving a Django web application. It allows the client to customize both the number of workers to fire up and the port to listen to.
@@ -76,7 +75,7 @@ The gunicorn-django does expect the following information to be provided by the 
 
 The following optional parameters can be also provided to a container:
 
- * A **port** that GUnicorn will be listening to. This defaults to 8001. It must be provided as the $GUNICORN_PORT environment variable.
+ * A **port** that GUnicorn will be listening to. This defaults to 8001. It must be provided as the $WEB_APP_PORT environment variable.
  * The **number of workers** GUnicorn will fire up. It defaults to 2. It must be provided as the $WEB_APP_WORKERS environment variable.
 
 In the following example we do assume to have this scenario:
@@ -94,10 +93,12 @@ We can fire up a gunicorn-django container and expose port 8001 to the host to t
 ```bash
 # gunicorn with 2 default workers
 $ sudo docker run -p 8001:8001 -v $PWD/volumes/django/djsonizer/:/var/www/webapp:ro -d gunicorn
-87680bcf0d77e35c3ed04dacbd88700707b3a886b606265b6c92a0c2878ae4fa
 
 # fire up 4 workers
 $ sudo docker run -p 8001:8001 -e WEB_APP_WORKERS=4 -v $PWD/volumes/django/djsonizer/:/var/www/webapp:ro -d gunicorn
+
+# fire up 32 workers and listen to port 1234
+$ sudo docker run -p 8001:8001 -e WEB_APP_WORKERS=32 -e WEB_APP_PORT=1234 -v $PWD/volumes/django/djsonizer/:/var/www/webapp:ro -d gunicorn
 0c924bc368b5dbca2d71d137d71f7f017faf1395c87b2146b79291c8393024be
 
 $ sudo docker ps
@@ -119,6 +120,7 @@ We can fire up a multi-container application based on gunicorn-django and the of
 ```bash
     gunicorn:
       environment:
+        - WEB_APP_PORT=8001
         - WEB_APP_WORKERS=4
       image: gunicorn:latest
       links:
@@ -172,7 +174,7 @@ We can fire up a multi-container application based on gunicorn-django and the of
 ```
 
 ## Limitations
-At the very moment the image does not allow the client to provide the container the port that GUnicorn should be listening for connections to. It defaults to 8001.
+None at the moment.
 
 
 ## Development
@@ -189,7 +191,3 @@ This module has been developed and tested on the following setup(s):
 *Docker Componse*
 
  - 1.5.0
-
-
-#### To do
- * Add support for an environment variable that allows the client to define the port GUnicorn will listen to. It defaults to 8001.
