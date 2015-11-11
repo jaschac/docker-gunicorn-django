@@ -71,20 +71,24 @@ ADD ME
 @TODO
 
 ## Limitations
-The module has not been tested as a daemon yet. So far it works by running the container with an interactive bash shell and running gunicorn, then accessing it through curl:
+The module has not been tested as a daemon yet. So far it works by running the container with an interactive bash shell and running gunicorn, then accessing it through curl. At the moment, the image automatically adapts to whatever name the Django web application is given, as long as it is server in /var/www/webapp/.
 
 ```bash
 $ pwd
 /home/jascha/projects/docker
 $ sudo docker run --rm=true -p 8001:8001 -v $PWD/volumes/django/djsonizer/:/var/www/webapp:ro -ti gunicorn /bin/bash
 
-root@91cadb7b3f80:# cd /var/www/webapp
-root@91cadb7b3f80:/var/www/webapp# gunicorn djsonizer.wsgi:application -w 2 --bind=127.0.0.1:8001 &
-[INFO] Listening at: http://127.0.0.1:8001 (444)
-[INFO] Using worker: sync
-[INFO] Booting worker with pid: 449
-[INFO] Booting worker with pid: 452
-root@91cadb7b3f80:/var/www/webapp# curl http://127.0.0.1:8001
+root@89535735ba9a:/# cd /var/www/webapp
+root@89535735ba9a:/var/www/webapp# webapp=$(find * -maxdepth 0 -type d)
+root@89535735ba9a:/var/www/webapp# echo $webapp
+djsonizer
+root@89535735ba9a:/var/www/webapp# gunicorn $webapp.wsgi:application -w 2 --bind=127.0.0.1:8001 &
+[2015-11-02 23:19:23 +0000] [449] [INFO] Starting gunicorn 19.3.0
+[2015-11-02 23:19:23 +0000] [449] [INFO] Listening at: http://127.0.0.1:8001 (449)
+[2015-11-02 23:19:23 +0000] [449] [INFO] Using worker: sync
+[2015-11-02 23:19:23 +0000] [454] [INFO] Booting worker with pid: 454
+[2015-11-02 23:19:23 +0000] [455] [INFO] Booting worker with pid: 455
+root@89535735ba9a:/var/www/webapp# curl http://127.0.0.1:8001
 {"cached": false, "word": "", "len": 0, "cached_by": {}}
 ```
 
