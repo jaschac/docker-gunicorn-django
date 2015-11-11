@@ -5,8 +5,6 @@
 3. [Setup](#setup)
     * [Pulling from the Docker Hub](#pulling-from-the-docker-hub)
     * [Building the Image from the Source](#building-the-image-from-the-source)
-        * [The Dockerfile](#the-dockerfile)
-        * [The setup.sh](#the-setup.sh)
 4. [Usage](#usage)
     * [Docker Compose](#docker-compose)
 5. [Limitations](#limitations)
@@ -31,42 +29,39 @@ A container running the gunicorn-django image will:
 There are two ways to get and use the gunicorn-django image to create containers:
 
 #### Pulling from the Docker Hub
- 1. Pulling it from the Docker Hub.
-
-#### Building the Image from the Source
-gunicorn-django's source code can be freely pulled from Github, modified and used to build the image.
+The gunicorn-django image can be easily pulled from the Docker Hub:
 
 ```bash
-    $ git clone <GIT REPO> gunicorn-django
+$ sudo docker pull jaschac/gunicorn-django
+```
+
+#### Building the Image from the Source
+gunicorn-django's source code can be freely pulled from Github and used to build the image.
+
+```bash
+$ git clone <GIT REPO> gunicorn-django
 ```
  
  Once pulled, the image will have the following structure:
 ```bash
-    gunicorn-django/
-    ├── Dockerfile
-    ├── LICENSE
-    ├── metadata.json
-    ├── README.md
-    └── scripts
-        └── setup.sh
+gunicorn-django/
+├── Dockerfile
+├── LICENSE
+├── metadata.json
+├── README.md
+└── scripts
+    └── setup.sh
 ```
 
 The image can be built with the following command(s):
 
 ```bash
-    $ sudo docker build -t gunicorn -f $PWD/gunicorn-django/Dockerfile $PWD/gunicorn-django
-    Successfully built 8ecf91a49000
-    $ sudo docker images
-    REPOSITORY          TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
-    gunicorn            latest              8ecf91a49000        13 seconds ago      380.1 MB
+$ sudo docker build -t gunicorn -f $PWD/gunicorn-django/Dockerfile $PWD/gunicorn-django
+Successfully built 8ecf91a49000
+$ sudo docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
+gunicorn            latest              8ecf91a49000        13 seconds ago      380.1 MB
 ```
-
-#### The Dockerfile
-@TODO
-
-#### The setup.sh
-@TODO
-
 
 ## Usage
 The gunicorn-django does expect the following information to be provided by the client:
@@ -118,59 +113,59 @@ We can fire up a multi-container application based on gunicorn-django and the of
 
 1) Create a docker-compose.yml file.
 ```bash
-    gunicorn:
-      environment:
-        - WEB_APP_PORT=8001
-        - WEB_APP_WORKERS=4
-      image: gunicorn:latest
-      links:
-        - memcached:memcached
-      ports:
-        - "8001:8001"
-      volumes:
-        - /home/jascha/projects/docker/volumes/django/djsonizer/:/var/www/webapp:ro
-    memcached:
-      image: memcached:latest
-      ports:
-        - "11211:11211"
+gunicorn:
+  environment:
+    - WEB_APP_PORT=8001
+    - WEB_APP_WORKERS=4
+  image: gunicorn:latest
+  links:
+    - memcached:memcached
+  ports:
+    - "8001:8001"
+  volumes:
+    - /home/jascha/projects/docker/volumes/django/djsonizer/:/var/www/webapp:ro
+  memcached:
+  image: memcached:latest
+  ports:
+      - "11211:11211"
 ```
 
 2) Fire the multi-container application up.
 ```bash
-    $ sudo docker-compose up -d
-    Creating images_memcached_1
-    Creating images_gunicorn_1
+$ sudo docker-compose up -d
+Creating images_memcached_1
+Creating images_gunicorn_1
     
-    $ sudo docker-compose ps
-           Name                  Command            State            Ports           
-    --------------------------------------------------------------------------------
-    images_gunicorn_1    /bin/sh -c sh setup.sh     Up      0.0.0.0:8001->8001/tcp   
-    images_memcached_1   /entrypoint.sh memcached   Up      0.0.0.0:11211->11211/tcp
+$ sudo docker-compose ps
+       Name                  Command            State            Ports           
+--------------------------------------------------------------------------------
+images_gunicorn_1    /bin/sh -c sh setup.sh     Up      0.0.0.0:8001->8001/tcp   
+images_memcached_1   /entrypoint.sh memcached   Up      0.0.0.0:11211->11211/tcp
     
-    $ sudo docker ps
-    CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                      NAMES
-    251f79f3b690        gunicorn:latest     "/bin/sh -c 'sh setup"   About a minute ago   Up About a minute   0.0.0.0:8001->8001/tcp     images_gunicorn_1
-    ee09a2c847c7        memcached:latest    "/entrypoint.sh memca"   About a minute ago   Up About a minute   0.0.0.0:11211->11211/tcp   images_memcached_1
+$ sudo docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                      NAMES
+251f79f3b690        gunicorn:latest     "/bin/sh -c 'sh setup"   About a minute ago   Up About a minute   0.0.0.0:8001->8001/tcp     images_gunicorn_1
+ee09a2c847c7        memcached:latest    "/entrypoint.sh memca"   About a minute ago   Up About a minute   0.0.0.0:11211->11211/tcp   images_memcached_1
 ```
 
 3) Test the application.
 ```bash
-    $ sudo docker inspect 251f79f3b690 | grep -e \"IPAddress\"
-    "IPAddress": "172.17.0.9",
+$ sudo docker inspect 251f79f3b690 | grep -e \"IPAddress\"
+"IPAddress": "172.17.0.9",
     
-    $ curl 172.17.0.9:8001/hello/
-    {"cached": false, "word": "hello", "len": 5, "cached_by": ""}
-    $ curl 172.17.0.9:8001/foo/
-    {"cached": false, "word": "foo", "len": 3, "cached_by": ""}
-    $ curl 172.17.0.9:8001/hello/
-    {"cached": true, "word": "hello", "len": 5, "cached_by": {"ip": "172.17.0.9", "hostname": "251f79f3b690"}}
+$ curl 172.17.0.9:8001/hello/
+{"cached": false, "word": "hello", "len": 5, "cached_by": ""}
+$ curl 172.17.0.9:8001/foo/
+{"cached": false, "word": "foo", "len": 3, "cached_by": ""}
+$ curl 172.17.0.9:8001/hello/
+{"cached": true, "word": "hello", "len": 5, "cached_by": {"ip": "172.17.0.9", "hostname": "251f79f3b690"}}
 ```
 
 4) Clean it all up.
 ```bash
-    $ sudo docker-compose stop
-    Stopping images_gunicorn_1 ... 
-    Stopping images_gunicorn_1 ... done
+$ sudo docker-compose stop
+Stopping images_gunicorn_1 ... 
+Stopping images_gunicorn_1 ... done
 ```
 
 ## Limitations
@@ -187,6 +182,7 @@ This module has been developed and tested on the following setup(s):
 *Docker*
 
  - 1.8.3_f4bf5c7
+ - 1.9.0_76d6bc9
 
 *Docker Componse*
 
