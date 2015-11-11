@@ -106,3 +106,14 @@ This module has been developed and tested on the following setup(s):
 *Docker Componse*
 
  - Not tested, yet.
+
+
+
+
+
+$ curl 172.17.0.8:8001
+{"cached": false, "word": "", "len": 0, "cached_by": {}}jascha@docker:~/projects/docker$ 
+jascha@docker:~/projects/docker$ sudo docker ps
+CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                    NAMES
+9551afcacce9        gunicorn            "/bin/sh -c 'sh setup"   About a minute ago   Up About a minute   0.0.0.0:8001->8001/tcp   kickass_tesla
+udo docker run -p 8001:8001 -v $PWD/volumes/django/djsonizer/:/var/www/webapp:ro -d gunicorn
