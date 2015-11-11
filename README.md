@@ -8,6 +8,7 @@
         * [The Dockerfile](#the-dockerfile)
         * [The setup.sh](#the-setup.sh)
 4. [Usage](#usage)
+    * [Docker Compose](#docker-compose)
 5. [Limitations](#limitations)
 6. [Development](#development)
     * [To do](#to-do)
@@ -103,6 +104,64 @@ $ sudo docker inspect 87680bcf0d77 | grep -e \"IPAddress\"
 
 $ curl 172.17.0.10:8001/hello/
 {"cached": false, "word": "hello", "len": 5, "cached_by": ""}
+```
+
+#### Docker Compose
+We can fire up a multi-container application based on gunicorn-django and the official memcached:latest image available on the Hub through Docker Compose.
+
+
+1) Create a docker-compose.yml file.
+```bash
+    gunicorn:
+      image: gunicorn:latest
+      links:
+        - memcached:memcached
+      ports:
+        - "8001:8001"
+      volumes:
+        - /home/jascha/projects/docker/volumes/django/djsonizer/:/var/www/webapp:ro
+    memcached:
+      image: memcached:latest
+      ports:
+        - "11211:11211"
+```
+
+2) Fire the multi-container application up.
+```bash
+    $ sudo docker-compose up -d
+    Creating images_memcached_1
+    Creating images_gunicorn_1
+    
+    $ sudo docker-compose ps
+           Name                  Command            State            Ports           
+    --------------------------------------------------------------------------------
+    images_gunicorn_1    /bin/sh -c sh setup.sh     Up      0.0.0.0:8001->8001/tcp   
+    images_memcached_1   /entrypoint.sh memcached   Up      0.0.0.0:11211->11211/tcp
+    
+    $ sudo docker ps
+    CONTAINER ID        IMAGE               COMMAND                  CREATED              STATUS              PORTS                      NAMES
+    251f79f3b690        gunicorn:latest     "/bin/sh -c 'sh setup"   About a minute ago   Up About a minute   0.0.0.0:8001->8001/tcp     images_gunicorn_1
+    ee09a2c847c7        memcached:latest    "/entrypoint.sh memca"   About a minute ago   Up About a minute   0.0.0.0:11211->11211/tcp   images_memcached_1
+```
+
+3) Test the application.
+```bash
+    $ sudo docker inspect 251f79f3b690 | grep -e \"IPAddress\"
+    "IPAddress": "172.17.0.9",
+    
+    $ curl 172.17.0.9:8001/hello/
+    {"cached": false, "word": "hello", "len": 5, "cached_by": ""}
+    $ curl 172.17.0.9:8001/foo/
+    {"cached": false, "word": "foo", "len": 3, "cached_by": ""}
+    $ curl 172.17.0.9:8001/hello/
+    {"cached": true, "word": "hello", "len": 5, "cached_by": {"ip": "172.17.0.9", "hostname": "251f79f3b690"}}
+```
+
+4) Clean it all up.
+```bash
+    $ sudo docker-compose stop
+    Stopping images_gunicorn_1 ... 
+    Stopping images_gunicorn_1 ... done
 ```
 
 ## Limitations
