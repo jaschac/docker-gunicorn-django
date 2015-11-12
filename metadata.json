@@ -1,20 +1,14 @@
 {
   "author" : "Jascha Casadio",
-  "dependencies" : [],
   "description": "Deploys a Gunicorn Web Server Gateway Interface HTTP Server serving a Django web application",
-  "issues_url": "https://bitbucket.org/lostinmalloc/dockerhub/images/gunicorn-django",
+  "issues_url": "https://github.com/jaschac/docker-gunicorn-django/issues",
   "license": "Apache-2.0",
   "name": "gunicorn-django",
   "operatingsystem_support": [],
   "project_page": "https://bitbucket.org/lostinmalloc/dockerhub/images/gunicorn-django",
-  "requirements": [
-      "name": "docker",
-      "version_requirement": ">=1.8.3"
-    }
-  ],
-  "source": "https://bitbucket.org/lostinmalloc/dockerhub/src",
+  "source": "https://github.com/jaschac/docker-gunicorn-django",
   "summary": "Gunicorn serving a Django web application",
   "tags":["django", "gunicorn", "python", "web application"],
-  "version": "0.1.5"
+  "version": "0.1.6"
 }
 
